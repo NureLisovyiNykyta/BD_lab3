@@ -1,5 +1,6 @@
 from datetime import datetime
 from flask import jsonify
+from sqlalchemy import text
 from app.utils.error_handler import ErrorHandler
 from app.models.goods_model import Good
 from app import db
@@ -175,5 +176,45 @@ class Sale(db.Model):
             return ErrorHandler.handle_error(
                 e,
                 message="Database error while deleting sale",
+                status_code=500
+            )
+
+    def get_most_expensive_good_on_date(data):
+        sale_date = data.get('SaleDate')
+
+        try:
+            result = db.session.execute(
+                text("SELECT dbo.fn_get_most_expensive_good_on_date(:sale_date)"),
+                {"sale_date": sale_date}
+            ).fetchone()
+
+            return result[0] if result else None
+
+        except Exception as e:
+            db.session.rollback()
+            return ErrorHandler.handle_error(
+                e,
+                message="Database error while adding sale",
+                status_code=500
+            )
+
+    def add_sale_procedure(data):
+        good_name = data.get('GoodName')
+        quantity_sold = data.get('QuantitySold')
+        check_number = data.get('CheckNumber')
+
+        try:
+            db.session.execute(
+                text("EXEC AddSales @good_name=:good_name, @check_number=:check_number, @quantity_sold=:quantity_sold"),
+                {'good_name': good_name, 'check_number': check_number, 'quantity_sold': quantity_sold}
+            )
+            db.session.commit()
+            return jsonify({"message": "Sale added successfully!"}), 200
+
+        except Exception as e:
+            db.session.rollback()
+            return ErrorHandler.handle_error(
+                e,
+                message="Database error while adding sale",
                 status_code=500
             )

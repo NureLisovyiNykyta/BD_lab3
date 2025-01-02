@@ -29,3 +29,16 @@ def sales_by_good(good_id):
 @sales_bp.route('/sales_summary_by_good/<int:good_id>', methods=['GET'])
 def sales_summary_by_good(good_id):
     return Sale.get_sales_summary_by_good(good_id)
+
+
+@sales_bp.route('/add_sale_procedure', methods=['POST'])
+def add_sale_procedure():
+    data = request.get_json()
+    return Sale.add_sale_procedure(data)
+
+
+@sales_bp.route('/get_most_expensive_good', methods=['GET'])
+def most_expensive_good():
+    data = request.get_json()
+    return Sale.get_most_expensive_good_on_date(data)
+
